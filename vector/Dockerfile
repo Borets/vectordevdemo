@@ -1,5 +1,10 @@
 FROM timberio/vector:0.34.0-debian
 
+# Install necessary packages
+RUN apt-get update && apt-get install -y \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /etc/vector
 
 COPY vector.toml ./vector.toml
@@ -15,5 +20,9 @@ HEALTHCHECK --interval=30s --timeout=3s \
 # Set environment variables
 ENV VECTOR_CONFIG=/etc/vector/vector.toml
 ENV VECTOR_WATCH_CONFIG=true
+
+# Create directory for Docker socket
+RUN mkdir -p /var/run && \
+    ln -s /var/run/docker.sock /var/run/docker.sock
 
 ENTRYPOINT ["/usr/bin/vector"] 
