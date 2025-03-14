@@ -8,32 +8,72 @@ async function generateLog() {
   const action = actions[Math.floor(Math.random() * actions.length)];
   const userId = Math.floor(Math.random() * 1000);
   
-  logger.info({
-    action,
-    userId,
-    timestamp: new Date().toISOString(),
-  });
+  try {
+    await sql`
+      INSERT INTO logs (action, user_id, timestamp)
+      VALUES (${action}, ${userId}, NOW())
+    `;
+    
+    logger.info({
+      action,
+      userId,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    logger.error('Failed to generate log', { error });
+  }
 }
 
 async function getLogs() {
-  const { rows } = await sql`
-    SELECT 
-      action,
-      COUNT(*) as count
-    FROM logs 
-    GROUP BY action 
-    ORDER BY count DESC 
-    LIMIT 5
-  `;
-  return rows;
+  try {
+    const { rows } = await sql`
+      SELECT 
+        action,
+        COUNT(*) as count
+      FROM logs 
+      GROUP BY action 
+      ORDER BY count DESC 
+      LIMIT 5
+    `;
+    return rows;
+  } catch (error) {
+    logger.error('Failed to fetch logs', { error });
+    return [];
+  }
 }
 
-export default function Home() {
+export default async function Home() {
+  const logs = await getLogs();
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <h1 className="text-4xl font-bold">Vector Demo App</h1>
+    <main className="p-4">
+      <Title>Vector.dev Demo Dashboard</Title>
+      <Subtitle>Real-time log processing and visualization</Subtitle>
+      
+      <div className="mt-8">
+        <Card>
+          <Title>Log Actions Distribution</Title>
+          <BarChart
+            className="mt-6"
+            data={logs}
+            index="action"
+            categories={["count"]}
+            colors={["blue"]}
+            yAxisWidth={48}
+          />
+        </Card>
+      </div>
+
+      <div className="mt-4">
+        <form action={generateLog}>
+          <button
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+            type="submit"
+          >
+            Generate Random Log
+          </button>
+        </form>
       </div>
     </main>
-  )
+  );
 } 
