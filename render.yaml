@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: vector-demo-app
+    env: node
+    region: oregon
+    buildCommand: cd app && npm install && npm run build
+    startCommand: cd app && npm start
+    envVars:
+      - key: POSTGRES_URL
+        fromDatabase:
+          name: vector-demo-db
+          property: connectionString
+
+  - type: web
+    name: vector-demo-processor
+    env: docker
+    region: oregon
+    dockerfilePath: ./vector/Dockerfile
+    plan: starter
+    envVars:
+      - key: POSTGRES_URL
+        fromDatabase:
+          name: vector-demo-db
+          property: connectionString
+
+databases:
+  - name: vector-demo-db
+    databaseName: vector_logs
+    user: vector_demo
+    plan: starter 
