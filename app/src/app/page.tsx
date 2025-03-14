@@ -1,6 +1,10 @@
 import { Card, Title, BarChart, Subtitle } from '@tremor/react';
-import { sql } from '@vercel/postgres';
+import { Pool } from 'pg';
 import logger from '../lib/logger';
+
+const pool = new Pool({
+  connectionString: process.env.POSTGRES_URL
+});
 
 async function generateLog() {
   'use server'
@@ -9,16 +13,21 @@ async function generateLog() {
   const userId = Math.floor(Math.random() * 1000);
   
   try {
-    await sql`
-      INSERT INTO logs (action, user_id, timestamp)
-      VALUES (${action}, ${userId}, NOW())
-    `;
-    
-    logger.info({
-      action,
-      userId,
-      timestamp: new Date().toISOString(),
-    });
+    const client = await pool.connect();
+    try {
+      await client.query(
+        'INSERT INTO logs (action, user_id, timestamp) VALUES ($1, $2, NOW())',
+        [action, userId]
+      );
+      
+      logger.info({
+        action,
+        userId,
+        timestamp: new Date().toISOString(),
+      });
+    } finally {
+      client.release();
+    }
   } catch (error) {
     logger.error('Failed to generate log', { error });
   }
@@ -26,16 +35,21 @@ async function generateLog() {
 
 async function getLogs() {
   try {
-    const { rows } = await sql`
-      SELECT 
-        action,
-        COUNT(*) as count
-      FROM logs 
-      GROUP BY action 
-      ORDER BY count DESC 
-      LIMIT 5
-    `;
-    return rows;
+    const client = await pool.connect();
+    try {
+      const result = await client.query(`
+        SELECT 
+          action,
+          COUNT(*) as count
+        FROM logs 
+        GROUP BY action 
+        ORDER BY count DESC 
+        LIMIT 5
+      `);
+      return result.rows;
+    } finally {
+      client.release();
+    }
   } catch (error) {
     logger.error('Failed to fetch logs', { error });
     return [];
