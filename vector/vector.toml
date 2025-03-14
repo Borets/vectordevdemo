@@ -26,9 +26,9 @@ type = "console"
 inputs = ["add_metadata"]
 encoding.codec = "json"
 
-[sinks.postgres]
-type = "postgres"
+[sinks.http_out]
+type = "http"
 inputs = ["add_metadata"]
-connection_string = "${POSTGRES_URL}"
-table = "logs"
-batch.timeout_secs = 1 
+encoding.codec = "json"
+uri = "${LOG_PROCESSOR_URL}/logs"
+method = "post" 
