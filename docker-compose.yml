@@ -1,0 +1,34 @@
+version: '3'
+services:
+  vector:
+    image: timberio/vector:0.34.0-debian
+    volumes:
+      - ./vector.toml:/etc/vector/vector.toml:ro
+    ports:
+      - "8686:8686" # API server
+      - "9598:9598" # Prometheus scrape endpoint
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: vectordemo
+      POSTGRES_PASSWORD: vectordemo
+      POSTGRES_DB: vectorlogs
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  demo-app:
+    build: ./app
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      - vector
+
+volumes:
+  postgres_data: 

@@ -1,0 +1,34 @@
+[api]
+enabled = true
+address = "0.0.0.0:8686"
+
+[sources.docker_logs]
+type = "docker_logs"
+include_containers = ["demo-app"]
+
+[transforms.parse_json]
+type = "remap"
+inputs = ["docker_logs"]
+source = '''
+. = parse_json!(.message)
+'''
+
+[transforms.add_metadata]
+type = "remap"
+inputs = ["parse_json"]
+source = '''
+.timestamp = now()
+.environment = get_env_var!("NODE_ENV") ?? "development"
+'''
+
+[sinks.console]
+type = "console"
+inputs = ["add_metadata"]
+encoding.codec = "json"
+
+[sinks.postgres]
+type = "postgres"
+inputs = ["add_metadata"]
+connection_string = "postgres://vectordemo:vectordemo@postgres:5432/vectorlogs"
+table = "logs"
+batch.timeout_secs = 1 
