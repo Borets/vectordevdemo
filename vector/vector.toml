@@ -18,7 +18,7 @@ type = "remap"
 inputs = ["parse_json"]
 source = '''
 .timestamp = now()
-.environment = get_env_var!("NODE_ENV") ?? "development"
+.environment = get_env_var("NODE_ENV") ?? "development"
 '''
 
 [sinks.console]
