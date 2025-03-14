@@ -28,38 +28,12 @@ async function getLogs() {
   return rows;
 }
 
-export default async function Home() {
-  const logs = await getLogs();
-
+export default function Home() {
   return (
-    <main className="p-4">
-      <Title>Vector.dev Demo Dashboard</Title>
-      <Subtitle>Real-time log processing and visualization</Subtitle>
-      
-      <div className="mt-8">
-        <Card>
-          <Title>Log Actions Distribution</Title>
-          <BarChart
-            className="mt-6"
-            data={logs}
-            index="action"
-            categories={["count"]}
-            colors={["blue"]}
-            yAxisWidth={48}
-          />
-        </Card>
-      </div>
-
-      <div className="mt-4">
-        <form action={generateLog}>
-          <button
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-            type="submit"
-          >
-            Generate Random Log
-          </button>
-        </form>
+    <main className="flex min-h-screen flex-col items-center justify-between p-24">
+      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
+        <h1 className="text-4xl font-bold">Vector Demo App</h1>
       </div>
     </main>
-  );
+  )
 } 
